@@ -14,9 +14,9 @@ const initialHolderState = {
 const Holder = () => {
   const { wallet, hasProvider, isConnecting, connectMetamask } = useMetaMask();
   const [holder, setHolder] = useState(initialHolderState);
-  const [credentials, setCredential] = useState(null);
+  const [credentials, setCredentials] = useState([]);
   // will set cid when status changed to issued in getHolderInfo fun.
-  const [cid, setCid] = useState("QmbLztjxmKSjGrMGdXK1rxSt4g3wiwcVFRfj3eQnPHDER3"); 
+  const [credentialCidList, setCredentialCidList] = useState([]); 
 
   useEffect(() => {
     const updateHolder = async () => {
@@ -40,6 +40,7 @@ const Holder = () => {
       walletAddress: localStorage.getItem("walletAddress"),
       isRegistered: true,
       isIssued: false,
+      credentialCidList: []
     };
   };
 
@@ -47,7 +48,7 @@ const Holder = () => {
     try {
       let req = createRequest();
       console.log(req);
-      let res = await axios.post(`${baseUrl}holdercollection`, req);
+      let res = await axios.post(`${baseUrl}holderCredential`, req);
       console.log(res);
       setActiveComponent('registerNotIssued');
     } catch (error) {
@@ -58,13 +59,13 @@ const Holder = () => {
   const getHolderInfo = async (walletAddress) => {
     try {
       const response = await axios.get(
-        `${baseUrl}holdercollection/holder/${walletAddress}`
+        `${baseUrl}holderCredential/holder/${walletAddress}`
       );
       console.log("data from DB:", response);
       if(response.data.isRegistered && response.data.isIssued){
         setActiveComponent('Issued');
         // if holder has multipal credential then we will store list of cid in db as array.
-        setCid(response.data.cid); // get cid of issued credential
+        setCredentialCidList(response.data.credentialCidList); // get cid of issued credential
 
       }else if(response.data.isRegistered){
         setActiveComponent('registerNotIssued');
@@ -85,16 +86,18 @@ const Holder = () => {
  
   const fetchCredential = async () => {
     try {
-      await axios.get(`https://ipfs.io/ipfs/${cid}`)
-      .then((result) => {
-        console.log(result.data);
-        setCredential(result.data);
+     credentialCidList.map( async (item) => {
+         await axios.get(`https://ipfs.io/ipfs/${item}`)
+        .then((result) => {
+          console.log(result.data);
+          setCredentials(prevCredentials => [...prevCredentials, result.data]);
+        })
+        .catch((err) => {
+          console.log(err);
+        });
       })
-      .catch((err) => {
-        console.log(err);
-      });
-     setActiveComponent('credential');
-
+      console.log(credentials)
+      setActiveComponent('credential');
     } catch (error) {
       console.error("Error fetching data:", error);
       // setResponse("Error fetching data");
@@ -145,18 +148,23 @@ const Holder = () => {
                              </>;
                              break;
      case 'credential':
-      componentToRender =   <div style={{
-                                border: '1px solid #ccc',
-                                borderRadius: '8px',
-                                padding: '16px',
-                                margin: '16px',
-                                boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
-                                backgroundImage: 'linear-gradient(to bottom right, rgb(6 228 146), rgb(208 96 253))',
-                                color: 'black'
-                              }}>
-                                <p style={{ margin: '8px 0' }}>Name: {credentials.name}</p>
-                                <p style={{ margin: '8px 0' }}>Birth Year: {credentials.birthyear}</p>
-                              </div>                     
+      componentToRender =  <>{
+                            credentials.map((item,idx)=> {
+                              return (
+                                <div key={idx} style={{
+                                  border: '1px solid #ccc',
+                                  borderRadius: '8px',
+                                  padding: '16px',
+                                  margin: '16px',
+                                  boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
+                                  backgroundImage: 'linear-gradient(to bottom right, rgb(6 228 146), rgb(208 96 253))',
+                                  color: 'black'
+                                }}>
+                                  <p style={{ margin: '8px 0' }}>{item}</p>   
+                                </div>
+                              )
+                            })}     
+                            </>               
        
     }
 

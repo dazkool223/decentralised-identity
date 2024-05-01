@@ -20,7 +20,7 @@ const contract = new ethers.Contract(DIDIssuerAddress, DIDIssuerABI, provider);
 const contractWithSigner = contract.connect(signer);
 
 const Form = (props) => {
-  const passport = uuidv4();
+  const idx = uuidv4();
 
   const initialForm = {
     name: "",
@@ -45,7 +45,7 @@ const Form = (props) => {
   };
   const createRequest = () => {
     const req = {
-      objectId: passport,
+      objectId: idx,
       userData: {
         ...formData,
         walletAddress: props.walletAddress,
@@ -94,6 +94,14 @@ const Form = (props) => {
     >
       <h3>Enter Holder Details</h3>
       <h4>{`for holder: ${props.walletAddress}`}</h4>
+      <StyledTextField
+        label="credentialName"
+        name="credentialName"
+        variant="filled"
+        required
+        value={formData.credentialName}
+        onChange={handleChange}
+      />
       <StyledTextField
         label="Name"
         name="name"

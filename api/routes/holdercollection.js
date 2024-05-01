@@ -13,21 +13,21 @@ const router = express.Router();
 
 // gets all the registered users
 router.get("/registered", async (req, res) => {
-  let collection = db.collection("holdercollection");
+  let collection = db.collection("holderCredential");
   let results = await collection.find({ isRegistered: true }).toArray();
   res.send(results).status(200);
 });
 
 // gets all the issued users
 router.get("/issued", async (req, res) => {
-  let collection = db.collection("holdercollection");
+  let collection = db.collection("holderCredential");
   let results = await collection.find({ isIssued: true }).toArray();
   res.send(results).status(200);
 });
 
 // This section will help you get a single record by id
 router.get("/:id", async (req, res) => {
-  let collection = db.collection("holdercollection");
+  let collection = db.collection("holderCredential");
   let query = { _id: new ObjectId(req.params.id) };
   let result = await collection.findOne(query);
   if (!result) res.send("Not found").status(404);
@@ -36,19 +36,20 @@ router.get("/:id", async (req, res) => {
 
 // gets holder information with wallet address
 router.get("/holder/:walletAddress", async (req, res) => {
-  let collection = db.collection("holdercollection");
+  let collection = db.collection("holderCredential");
   let query = { walletAddress: req.params.walletAddress };
   let result = await collection.findOne(query);
   if (result === null) res.status(404).send("Not found here");
   else res.status(200).send(result);
 });
+
 router.post("/", async (req, res) => {
   try {
     let newDocument = {
       _id: new ObjectId(),
       ...req.body,
     };
-    let collection = db.collection("holdercollection");
+    let collection = db.collection("holderCredential");
     let result = await collection.insertOne(newDocument);
     console.log(result);
     res.send(result).status(204);
@@ -63,18 +64,25 @@ router.patch("/:walletAddress", async (req, res) => {
   try {
     const query = { walletAddress: req.params.walletAddress };
     console.log(query);
-    const updates = {
-      $set: {
-        name: req.body.name,
-        birthyear: req.body.birthyear,
-        passportId: req.body.passportId,
-        isIssued: req.body.isIssued,
-        did: req.body.did,
+    // const updates = {
+    //   $set: {
+    //     name: req.body.name,
+    //     birthyear: req.body.birthyear,
+    //     passportId: req.body.passportId,
+    //     isIssued: req.body.isIssued,
+    //     did: req.body.did,
+    //   },
+    // };
+
+    const newRecord = {
+      $set:{ isIssued: req.body.isIssued },
+      $push: {
+        credentialCidList: req.body.credentialDID
       },
     };
 
-    let collection = db.collection("holdercollection");
-    let result = await collection.updateOne(query, updates);
+    let collection = db.collection("holderCredential");
+    let result = await collection.updateOne(query, newRecord);
     res.send(result).status(200);
   } catch (err) {
     console.error(err);
@@ -87,7 +95,7 @@ router.delete("/:id", async (req, res) => {
   try {
     const query = { _id: new ObjectId(req.params.id) };
 
-    const collection = db.collection("holdercollection");
+    const collection = db.collection("holderCredential");
     let result = await collection.deleteOne(query);
 
     res.send(result).status(200);
