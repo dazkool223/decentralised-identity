@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
-import "../../src/styles/Holder.module.css"; // Import your CSS file
 import axios from "axios";
 import { useMetaMask } from "../../src/hooks/useMetamask.jsx";
 import { Button } from "@mui/material";
+import "../../src/styles/Holder.module.css"; // Import your CSS file
 
 const initialHolderState = {
   name: null,
@@ -15,34 +15,31 @@ const Holder = () => {
   const { wallet, hasProvider, isConnecting, connectMetamask } = useMetaMask();
   const [holder, setHolder] = useState(initialHolderState);
   const [credentials, setCredentials] = useState([]);
-  // will set cid when status changed to issued in getHolderInfo fun.
-  const [credentialCidList, setCredentialCidList] = useState([]); 
-
-  useEffect(() => {
-    const updateHolder = async () => {
-      setHolder({ ...holder, walletAddress: wallet.accounts[0] });
-    };
-    // console.log("wallet changed");
-    if (wallet.accounts.length > 0) {
-      localStorage.setItem("walletAddress", wallet.accounts[0]);
-      updateHolder();
-     const aa =  localStorage.getItem("walletAddress")	
-    //  console.log(aa) 
-     getHolderInfo(aa);
-    }
-    console.log(holder);
-  }, [wallet]);
+  const [credentialCidList, setCredentialCidList] = useState([]);
+  const [activeComponent, setActiveComponent] = useState('notRegister');
+  const [message, setMessage] = useState(null);
 
   const baseUrl = "http://localhost:8000/";
 
-  const createRequest = () => {
-    return {
-      walletAddress: localStorage.getItem("walletAddress"),
-      isRegistered: true,
-      isIssued: false,
-      credentialCidList: []
+  useEffect(() => {
+    const updateHolder = async () => {
+      if (wallet.accounts.length > 0) {
+        const walletAddress = wallet.accounts[0];
+        setHolder(prevHolder => ({ ...prevHolder, walletAddress }));
+        localStorage.setItem("walletAddress", walletAddress);
+        await getHolderInfo(walletAddress);
+      }
     };
-  };
+
+    updateHolder();
+  }, [wallet.accounts]);
+
+  const createRequest = () => ({
+    walletAddress: localStorage.getItem("walletAddress"),
+    isRegistered: true,
+    isIssued: false,
+    credentialCidList: [],
+  });
 
   const registerToDB = async () => {
     try {
@@ -58,120 +55,113 @@ const Holder = () => {
 
   const getHolderInfo = async (walletAddress) => {
     try {
-      const response = await axios.get(
-        `${baseUrl}holderCredential/holder/${walletAddress}`
-      );
+      const response = await axios.get(`${baseUrl}holderCredential/holder/${walletAddress}`);
       console.log("data from DB:", response);
-      if(response.data.isRegistered && response.data.isIssued){
+      if (response.data.isRegistered && response.data.isIssued) {
         setActiveComponent('Issued');
-        // if holder has multipal credential then we will store list of cid in db as array.
-        setCredentialCidList(response.data.credentialCidList); // get cid of issued credential
-
-      }else if(response.data.isRegistered){
+        setCredentialCidList(response.data.credentialCidList);
+      } else if (response.data.isRegistered) {
         setActiveComponent('registerNotIssued');
-      }else {
+      } else {
         setActiveComponent('notRegister');
       }
-      setHolder(response);
-    } catch (e) {
-      setHolder({ ...holder, isRegistered: false });
+      setHolder(response.data);
+    } catch (error) {
+      console.log("Error fetching holder info:", error);
+      setHolder(prevHolder => ({ ...prevHolder, isRegistered: false }));
     }
   };
 
   const handleConnect = async () => {
     await connectMetamask();
-    await getHolderInfo(wallet.accounts[0]);
-    setActiveComponent('notRegister');
+    if (wallet.accounts.length > 0) {
+      await getHolderInfo(wallet.accounts[0]);
+      setActiveComponent('notRegister');
+    }
   };
- 
+
   const fetchCredential = async () => {
     try {
-     credentialCidList.map( async (item) => {
-         await axios.get(`https://ipfs.io/ipfs/${item}`)
-        .then((result) => {
-          console.log(result.data);
-          setCredentials(prevCredentials => [...prevCredentials, result.data]);
+      const fetchedCredentials = await Promise.all(
+        credentialCidList.map(async (item) => {
+          const result = await axios.get(`https://ipfs.io/ipfs/${item}`);
+          return result.data;
         })
-        .catch((err) => {
-          console.log(err);
-        });
-      })
-      console.log(credentials)
+      );
+      setCredentials(fetchedCredentials);
       setActiveComponent('credential');
     } catch (error) {
       console.error("Error fetching data:", error);
-      // setResponse("Error fetching data");
     }
   };
 
-  // WRITE A GENERATE PROOF BUTTON TO SEND THE PROOF TO THE VERIFIER
-  // WRITE A VERIFY PROOF BUTTON WHICH WILL CALL THE VERIFIER SMART CONTRACT
-
-  const [message,setMessage] = useState(null)
-
   const checkIssuedStatus = () => {
-    if(holder.isIssued){
-      // fetch cid
-      // setCid()
+    if (holder.isIssued) {
       setActiveComponent('Issued');
-    }else {
-      setMessage('Watting for issuer to issue credential...!');
+    } else {
+      setMessage('Waiting for issuer to issue credential...!');
       setActiveComponent('registerNotIssued');
     }
+  };
+
+  let componentToRender;
+
+  switch (activeComponent) {
+    case 'notRegister':
+      componentToRender = (
+        <>
+          <p>User not Registered yet...!</p>
+          <Button onClick={registerToDB}>Register User</Button>
+        </>
+      );
+      break;
+    case 'registerNotIssued':
+      componentToRender = (
+        <>
+          <div>
+            <h3>User Registered</h3>
+            <p>{message}</p>
+            <Button onClick={checkIssuedStatus}>Check credential status</Button>
+          </div>
+        </>
+      );
+      break;
+    case 'Issued':
+      componentToRender = (
+        <>
+          <div>
+            <h3>Credential issued</h3>
+            <Button onClick={fetchCredential}>Fetch Credential</Button>
+          </div>
+        </>
+      );
+      break;
+    case 'credential':
+      componentToRender = (
+        <>
+          {credentials.map((item, idx) => (
+            <div key={idx} style={{
+              border: '1px solid #ccc',
+              borderRadius: '8px',
+              padding: '16px',
+              margin: '16px',
+              boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
+              backgroundImage: 'linear-gradient(to bottom right, rgb(6 228 146), rgb(208 96 253))',
+              color: 'black'
+            }}>
+              <p style={{ margin: '8px 0' }}>{item}</p>
+            </div>
+          ))}
+        </>
+      );
+      break;
+    default:
+      componentToRender = null;
   }
 
-    let [activeComponent, setActiveComponent] = useState('notRegister');
-    let componentToRender;
-
-    // Switch statement to determine which component to render
-    switch(activeComponent) {
-      case 'notRegister':
-        componentToRender = <>
-                              <p> User not Registered yet...!</p>
-                              <Button onClick={registerToDB}>Register User</Button>
-                            </> ;
-        break;
-      case 'registerNotIssued':
-        componentToRender = <>
-                            <div>
-                            <h3>User Registered</h3> 
-                            <p>{message}</p>
-                            <Button onClick={checkIssuedStatus}> Check credential status </Button>
-                            </div>
-                            </>;
-        break;
-      case 'Issued':
-        componentToRender = <>
-                              <div> <h3>Credential issued</h3> 
-                                <Button onClick={fetchCredential}> Fetch Credential </Button> 
-                              </div>
-                             </>;
-                             break;
-     case 'credential':
-      componentToRender =  <>{
-                            credentials.map((item,idx)=> {
-                              return (
-                                <div key={idx} style={{
-                                  border: '1px solid #ccc',
-                                  borderRadius: '8px',
-                                  padding: '16px',
-                                  margin: '16px',
-                                  boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
-                                  backgroundImage: 'linear-gradient(to bottom right, rgb(6 228 146), rgb(208 96 253))',
-                                  color: 'black'
-                                }}>
-                                  <p style={{ margin: '8px 0' }}>{item}</p>   
-                                </div>
-                              )
-                            })}     
-                            </>               
-       
-    }
-
   return (
-    <div style={{marginTop:'20px'}}>
-    <h1>Holder Side</h1>
-      {/* <MetamaskConnect/> */}
+    <div style={{ marginTop: '20px' }}>
+      <h1>Holder Side</h1>
       <header className="App-header">
         {!hasProvider && (
           <a href="https://metamask.io" target="_blank" rel="noreferrer">
@@ -187,12 +177,13 @@ const Holder = () => {
       {hasProvider && wallet.accounts.length > 0 && (
         <>
           <div>
-            Current Wallet Address :{" "}
+            Current Wallet Address:{" "}
             <a
               className="text_link tooltip-bottom"
               href={`https://etherscan.io/address/${wallet.accounts[0]}`}
               target="_blank"
-              data-tooltip="Open in Block Explorer" rel="noreferrer"
+              data-tooltip="Open in Block Explorer"
+              rel="noreferrer"
             >
               {wallet.accounts[0]}
             </a>
