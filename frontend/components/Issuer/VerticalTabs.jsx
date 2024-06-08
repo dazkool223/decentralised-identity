@@ -68,7 +68,7 @@ export default function VerticalTabs({
         value={value}
         onChange={handleChange}
         aria-label="Vertical tabs"
-        sx={{ borderRight: 1, borderColor: "divider" }}
+        sx={{ borderRight: 1, borderColor: "divider", minWidth: "100px" }}
       >
         <Tab label="Issued Holders" {...a11yProps(0)} />
         <Tab label="Holders To be Issued" {...a11yProps(1)} />

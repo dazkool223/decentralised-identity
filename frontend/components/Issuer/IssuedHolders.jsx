@@ -22,14 +22,12 @@ const columns = [
   {
     id: "passportId",
     label: "Passport ID",
-    minWidth: 170,
     align: "right",
     format: (value) => value.toLocaleString("en-US"),
   },
   {
     id: "did",
     label: "Decentralised Identifier",
-
     align: "right",
     format: (value) => value.toLocaleString("en-US"),
   },
@@ -73,7 +71,11 @@ export default function IssuedHolders({ issuedHolders, setIssuedHolders }) {
                     {columns.map((column) => {
                       const value = row[column.id];
                       return (
-                        <TableCell key={column.id} align={column.align}>
+                        <TableCell
+                          key={column.id}
+                          align={column.align}
+                          style={{ textWrap: "no-wrap " }}
+                        >
                           {column.format && typeof value === "number"
                             ? column.format(value)
                             : value}

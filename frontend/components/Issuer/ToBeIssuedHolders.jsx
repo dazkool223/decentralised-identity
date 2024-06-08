@@ -40,7 +40,7 @@ export default function ToBeIssuedHolders({
     <List
       sx={{
         width: "100%",
-        maxWidth: "500rem",
+        maxHeight: 440,
         bgcolor: "background.paper",
       }}
     >
