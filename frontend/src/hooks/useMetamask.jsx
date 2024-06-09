@@ -23,58 +23,68 @@ import {
     const [errorMessage, setErrorMessage] = useState("");
     const [provider, setProvider] = useState(null);
     const [signer, setSigner] = useState(null);
-  
+
     const clearError = () => setErrorMessage("");
-  
-    const formatBalance = (rawBalance) => {
-      const balance = ethers.utils.formatEther(rawBalance);
-      return balance;
-    };
-  
+
+    // const formatBalance = (rawBalance) => {
+    //   const balance = ethers.utils.formatEther(rawBalance);
+    //   return balance;
+    // };
+
     const _updateWallet = useCallback(async (providedAccounts) => {
-      const accounts = providedAccounts || await window.ethereum.request({ method: "eth_accounts" });
+      const accounts =
+        providedAccounts ||
+        (await window.ethereum.request({ method: "eth_accounts" }));
       if (accounts.length === 0) {
         setWallet(disconnectedState);
         return;
       }
-  
-      const balance = formatBalance(await window.ethereum.request({
+
+      const balance = await window.ethereum.request({
         method: "eth_getBalance",
         params: [accounts[0], "latest"],
-      }));
-  
+      });
+
       setWallet({ accounts, balance });
-  
+
       const _provider = new ethers.providers.Web3Provider(window.ethereum);
       setProvider(_provider);
       setSigner(_provider.getSigner());
     }, []);
-  
-    const updateWalletAndAccounts = useCallback(() => _updateWallet(), [_updateWallet]);
-    const updateWallet = useCallback((accounts) => _updateWallet(accounts), [_updateWallet]);
-  
+
+    const updateWalletAndAccounts = useCallback(
+      () => _updateWallet(),
+      [_updateWallet]
+    );
+    const updateWallet = useCallback(
+      (accounts) => _updateWallet(accounts),
+      [_updateWallet]
+    );
+
     useEffect(() => {
       const getProvider = async () => {
         const _provider = await detectEthereumProvider({ silent: true });
         setHasProvider(Boolean(_provider));
-  
+
         if (_provider) {
           window.ethereum.on("accountsChanged", updateWallet);
           await _updateWallet();
         }
       };
-  
+
       getProvider();
-  
+
       return () => {
         window.ethereum?.removeListener("accountsChanged", updateWallet);
       };
     }, [updateWallet, _updateWallet]);
-  
+
     const connectMetamask = async () => {
       setIsConnecting(true);
       try {
-        const accounts = await window.ethereum.request({ method: "eth_requestAccounts" });
+        const accounts = await window.ethereum.request({
+          method: "eth_requestAccounts",
+        });
         clearError();
         await updateWallet(accounts);
       } catch (err) {
@@ -84,7 +94,7 @@ import {
         setIsConnecting(false);
       }
     };
-  
+
     return (
       <MetamaskContext.Provider
         value={{
@@ -103,10 +113,10 @@ import {
       </MetamaskContext.Provider>
     );
   };
-  
+
   // Add prop types for validation
   MetamaskContextProvider.propTypes = {
-    children: PropTypes.node.isRequired,
+    children: PropTypes.node,
   };
   
   
