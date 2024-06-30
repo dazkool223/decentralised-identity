@@ -1,1 +1,1 @@
-export const DIDIssuerAddress = "0x711824c2741bc60f875abf4e802c296240eabfb2";
+export const DIDIssuerAddress = "0x0258e4419e4bcc533bba290836e6c9803c0c9c02";

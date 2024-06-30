@@ -11,23 +11,22 @@ import TableRow from "@mui/material/TableRow";
 const baseUrl = "http://localhost:8000/";
 
 const columns = [
-  { id: "name", label: "Name" },
   { id: "walletAddress", label: "Wallet Address" },
   {
-    id: "birthyear",
-    label: "Birth Year",
+    id: "credentialName",
+    label: "Name of Credential",
     align: "right",
     format: (value) => (value = 2024 - value),
   },
   {
-    id: "passportId",
-    label: "Passport ID",
+    id: "did",
+    label: "Credential DID",
     align: "right",
     format: (value) => value.toLocaleString("en-US"),
   },
   {
-    id: "did",
-    label: "Decentralised Identifier",
+    id: "ipfsLink",
+    label: "Show more credentials",
     align: "right",
     format: (value) => value.toLocaleString("en-US"),
   },
@@ -66,24 +65,27 @@ export default function IssuedHolders({ issuedHolders, setIssuedHolders }) {
             {issuedHolders
               .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
               .map((row) => {
-                return (
-                  <TableRow hover role="checkbox" tabIndex={-1} key={row._id}>
-                    {columns.map((column) => {
-                      const value = row[column.id];
-                      return (
-                        <TableCell
-                          key={column.id}
-                          align={column.align}
-                          style={{ textWrap: "no-wrap " }}
-                        >
-                          {column.format && typeof value === "number"
-                            ? column.format(value)
-                            : value}
-                        </TableCell>
-                      );
-                    })}
-                  </TableRow>
-                );
+                const credentialArray = row.credentialCidList
+                credentialArray.map((credential)=>{
+                  return (
+                    <TableRow hover role="checkbox" tabIndex={-1} key={row._id}>
+                      {columns.map((column) => {
+                        const value = credential[column.id];
+                        return (
+                          <TableCell
+                            key={column.id}
+                            align={column.align}
+                            style={{ textWrap: "no-wrap " }}
+                          >
+                            {column.format && typeof value === "number"
+                              ? column.format(value)
+                              : value}
+                          </TableCell>
+                        );
+                      })}
+                    </TableRow>
+                  );
+                })
               })}
           </TableBody>
         </Table>

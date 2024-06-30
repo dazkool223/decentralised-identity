@@ -23,6 +23,7 @@ const Form = (props) => {
   const idx = uuidv4();
 
   const initialForm = {
+    credentialName: "",
     name: "",
     birthyear: "",
   };
@@ -35,8 +36,8 @@ const Form = (props) => {
     return resp.data;
   };
 
-  const callMint = async (address, cid) => {
-    const tx = await contractWithSigner.mint(address, cid);
+  const callMint = async (address, credName, cid) => {
+    const tx = await contractWithSigner.mint(address, credName, cid);
     await tx.wait();
     console.log(`https://etherscan.io/tx/${tx.hash}`);
     const did = await contractWithSigner.record(address);
@@ -49,7 +50,7 @@ const Form = (props) => {
       userData: {
         ...formData,
         walletAddress: props.walletAddress,
-        passportId: passport,
+        // passportId: passport,
       },
     };
     return req;
@@ -66,13 +67,17 @@ const Form = (props) => {
     let resp = await postToIPFS(req);
     let cid = resp.IpfsHash;
     // call smart contract with params
-    const did = await callMint(req.userData.walletAddress, cid);
-    console.log(did);
+    const credentials = await callMint(
+      req.userData.walletAddress,
+      req.userData.credentialName,
+      cid
+    );
+    console.log(credentials);
     // update holder in db
     const updatedHolder = {
       ...req.userData,
       isIssued: true,
-      did: did,
+      credentials: credentials,
     };
     await updateHolder(req.userData.walletAddress, updatedHolder);
   };
@@ -95,7 +100,7 @@ const Form = (props) => {
       <h3>Enter Holder Details</h3>
       <h4>{`for holder: ${props.walletAddress}`}</h4>
       <StyledTextField
-        label="credentialName"
+        label="Name of Credential"
         name="credentialName"
         variant="filled"
         required

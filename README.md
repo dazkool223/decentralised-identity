@@ -20,3 +20,9 @@ cd api/
 npm install
 npm run dev
 ```
+
+
+wallet address | credential name | credential DID | view credentials button <a>ipfs link</a>
+
+0x123 | PASSPORT | did:PASS:456 | link1
+0x123 | GYM | did:GYM:pqr | link2
