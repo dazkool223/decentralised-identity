@@ -15,6 +15,7 @@ const QUICKNODE_ENDPOINT = import.meta.env.VITE_HTTP_PROVIDER_URL;
 const PRIVATE_KEY = import.meta.env.VITE_PRIVATE_KEY;
 const API_KEY = import.meta.env.VITE_API_KEY;
 const provider = new ethers.AlchemyProvider("sepolia", API_KEY);
+// const provider = new ethers.BrowserProvider(window.ethereum);
 const signer = new ethers.Wallet(PRIVATE_KEY, provider);
 const contract = new ethers.Contract(DIDIssuerAddress, DIDIssuerABI, provider);
 const contractWithSigner = contract.connect(signer);
@@ -37,7 +38,13 @@ const Form = (props) => {
   };
 
   const callMint = async (address, credName, cid) => {
-    const tx = await contractWithSigner.mint(address, credName, cid);
+    console.log(address);
+    console.log(credName);
+    console.log(cid);
+
+    let mint_func = contract.getFunction("mint");
+    let tx = await mint_func.call(address, credName, cid);
+    // const tx = await contractWithSigner.mint(address, credName, cid);
     await tx.wait();
     console.log(`https://etherscan.io/tx/${tx.hash}`);
     const did = await contractWithSigner.record(address);
@@ -50,7 +57,6 @@ const Form = (props) => {
       userData: {
         ...formData,
         walletAddress: props.walletAddress,
-        // passportId: passport,
       },
     };
     return req;
@@ -67,6 +73,7 @@ const Form = (props) => {
     let resp = await postToIPFS(req);
     let cid = resp.IpfsHash;
     // call smart contract with params
+
     const credentials = await callMint(
       req.userData.walletAddress,
       req.userData.credentialName,
