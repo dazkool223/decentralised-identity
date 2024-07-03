@@ -67,35 +67,17 @@
 			},
 			{
 				"internalType": "string",
-				"name": "name",
+				"name": "_name",
 				"type": "string"
 			},
 			{
 				"internalType": "string",
-				"name": "URI",
+				"name": "_URI",
 				"type": "string"
 			}
 		],
 		"name": "mint",
-		"outputs": [
-			{
-				"components": [
-					{
-						"internalType": "string",
-						"name": "name",
-						"type": "string"
-					},
-					{
-						"internalType": "string",
-						"name": "DID",
-						"type": "string"
-					}
-				],
-				"internalType": "struct DIDIssuer.Credential[]",
-				"name": "",
-				"type": "tuple[]"
-			}
-		],
+		"outputs": [],
 		"stateMutability": "nonpayable",
 		"type": "function"
 	},
@@ -186,6 +168,37 @@
 		],
 		"name": "Update",
 		"type": "event"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "_to",
+				"type": "address"
+			}
+		],
+		"name": "getCredentials",
+		"outputs": [
+			{
+				"components": [
+					{
+						"internalType": "string",
+						"name": "name",
+						"type": "string"
+					},
+					{
+						"internalType": "string",
+						"name": "DID",
+						"type": "string"
+					}
+				],
+				"internalType": "struct DIDIssuer.Credential[]",
+				"name": "",
+				"type": "tuple[]"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
 	},
 	{
 		"inputs": [],
