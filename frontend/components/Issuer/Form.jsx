@@ -17,8 +17,8 @@ const API_KEY = import.meta.env.VITE_API_KEY;
 const provider = new ethers.AlchemyProvider("sepolia", API_KEY);
 // const provider = new ethers.BrowserProvider(window.ethereum);
 const signer = new ethers.Wallet(PRIVATE_KEY, provider);
-const contract = new ethers.Contract(DIDIssuerAddress, DIDIssuerABI, provider);
-const contractWithSigner = contract.connect(signer);
+const contract = new ethers.Contract(DIDIssuerAddress, DIDIssuerABI, signer);
+// const contractWithSigner = contract.connect(signer);
 
 const Form = (props) => {
   const idx = uuidv4();
@@ -43,11 +43,11 @@ const Form = (props) => {
     console.log(cid);
 
     let mint_func = contract.getFunction("mint");
-    let tx = await mint_func.call(address, credName, cid);
+    let tx = await mint_func.call(mint_func, address, credName, cid);
     // const tx = await contractWithSigner.mint(address, credName, cid);
     await tx.wait();
     console.log(`https://etherscan.io/tx/${tx.hash}`);
-    const did = await contractWithSigner.record(address);
+    const did = await contract.record(address);
 
     return did;
   };
