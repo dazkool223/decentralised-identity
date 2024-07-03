@@ -1,59 +1,72 @@
 import React, { useEffect, useState } from "react";
-import { v4 as uuidv4 } from "uuid";
-import { Button } from "@mui/material";
-import VerticalTabs from "./VerticalTabs";
 import axios from "axios";
-import { useMetaMask } from "../../src/hooks/useMetamask";
-import { ethers } from "ethers";
+
 const baseUrl = "http://localhost:8000/";
-import { DIDIssuerAddress } from "../../src/contracts/DIDIssuerAddress";
-import DIDIssuerABI from "../../src/contracts/DIDIssuerABI.json";
+
+import Accordion from "@mui/material/Accordion";
+import AccordionSummary from "@mui/material/AccordionSummary";
+import AccordionDetails from "@mui/material/AccordionDetails";
+import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown";
+import Button from "@mui/material/Button";
+import Form from "./Form";
+import { Dialog } from "@mui/material";
+import RegisteredHolders from "./RegisteredHolders";
 
 const Issuer = () => {
-  const [issuedHolders, setIssuedHolders] = useState([]);
-  const [unissuedHolders, setUnissuedHolders] = useState([]);
-  const [contract, setContract] = useState(null);
-  const { wallet, hasProvider, isConnecting, connectMetamask } = useMetaMask();
+  const [registeredHolders, setRegisteredHolders] = useState([]);
 
   useEffect(() => {
     document.title = "Issuer";
-    const getAddress = (list) => {
-      let arr = [];
-      list.map((item) => {
-        arr.push(item.walletAddress);
-      });
-      return arr;
-    };
-    axios
-      .get(`${baseUrl}holdercollection/issued`)
-      .then((response) => {
-        console.log("Issued Credential",response.data);
-        setIssuedHolders(response.data);
-      })
-      .catch((error) => {
-        console.log("Could not get issued holders details", error);
-      });
     axios
       .get(`${baseUrl}holdercollection/registered`)
       .then((response) => {
-        // console.log(response.data);
-        const onlyRegistered = response.data.filter((item) => !item.isIssued);
-        const arr = getAddress(onlyRegistered);
-        setUnissuedHolders(arr);
+        setRegisteredHolders(response.data);
       })
       .catch((error) => {
         console.log("Could not get holder details", error);
       });
   }, []);
+
+  const [open, setOpen] = useState(false);
+  const handleOpen = async () => {
+    setOpen(true);
+  };
+  const handleClose = () => {
+    setOpen(false);
+  };
   return (
     <>
       <h1>Issuer Webpage</h1>
-      <VerticalTabs
+      {/* <VerticalTabs
         issuedHolders={issuedHolders}
         setIssuedHolders={setIssuedHolders}
         unissuedHolders={unissuedHolders}
         setUnissuedHolders={setUnissuedHolders}
-      ></VerticalTabs>
+      ></VerticalTabs> */}
+      {registeredHolders.map((user) => {
+        return (
+          <Accordion key={user.walletAddress}>
+            <AccordionSummary expandIcon={<ArrowDropDownIcon />}>
+              {user.walletAddress}
+            </AccordionSummary>
+            <AccordionDetails>
+              <Button
+                style={{ backgroundColor: "#213547", color: "white" }}
+                onClick={handleOpen}
+              >
+                issue more credentials
+              </Button>
+              <Dialog open={open} onClose={handleClose}>
+                <Form
+                  handleClose={handleClose}
+                  walletAddress={user.walletAddress}
+                ></Form>
+              </Dialog>
+              <RegisteredHolders credentials={user.credentialCidList} />
+            </AccordionDetails>
+          </Accordion>
+        );
+      })}
     </>
   );
 };

@@ -63,26 +63,11 @@ router.post("/", async (req, res) => {
 router.patch("/:walletAddress", async (req, res) => {
   try {
     const query = { walletAddress: req.params.walletAddress };
-    console.log(query);
-    // const updates = {
-    //   $set: {
-    //     name: req.body.name,
-    //     birthyear: req.body.birthyear,
-    //     passportId: req.body.passportId,
-    //     isIssued: req.body.isIssued,
-    //     did: req.body.did,
-    //   },
-    // };
-
-    const newRecord = {
-      $set:{ isIssued: req.body.isIssued },
-      $push: {
-        credentialCidList: req.body.credentialDID
-      },
-    };
-
+    console.log(req.body);
     let collection = db.collection("holderCredential");
-    let result = await collection.updateOne(query, newRecord);
+    let result = await collection.updateOne(query, {
+      $set: req.body,
+    });
     res.send(result).status(200);
   } catch (err) {
     console.error(err);

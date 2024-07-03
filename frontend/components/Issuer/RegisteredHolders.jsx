@@ -7,19 +7,18 @@ import TableContainer from "@mui/material/TableContainer";
 import TableHead from "@mui/material/TableHead";
 import TablePagination from "@mui/material/TablePagination";
 import TableRow from "@mui/material/TableRow";
+import { Button } from "@mui/material";
 
 const baseUrl = "http://localhost:8000/";
 
 const columns = [
-  { id: "walletAddress", label: "Wallet Address" },
   {
-    id: "credentialName",
+    id: "name",
     label: "Name of Credential",
-    align: "right",
-    format: (value) => (value = 2024 - value),
+    align: "left",
   },
   {
-    id: "did",
+    id: "DID",
     label: "Credential DID",
     align: "right",
     format: (value) => value.toLocaleString("en-US"),
@@ -32,10 +31,19 @@ const columns = [
   },
 ];
 
-export default function IssuedHolders({ issuedHolders, setIssuedHolders }) {
+export default function RegisteredHolders(props) {
+  useEffect(() => {
+    props.credentials.map((credential) => {
+      credential.ipfsLink = `https://ipfs.io/ipfs/${
+        credential.DID.split(":")[2]
+      }`;
+    });
+    console.log(props.credentials);
+    setCredentials(props.credentials);
+  }, []);
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
-
+  const [credentials, setCredentials] = useState([]);
   const handleChangePage = (event, newPage) => {
     setPage(newPage);
   };
@@ -44,6 +52,7 @@ export default function IssuedHolders({ issuedHolders, setIssuedHolders }) {
     setRowsPerPage(+event.target.value);
     setPage(0);
   };
+
   return (
     <Paper sx={{ width: "100%", overflow: "hidden" }}>
       <TableContainer sx={{ maxHeight: 440 }}>
@@ -62,15 +71,32 @@ export default function IssuedHolders({ issuedHolders, setIssuedHolders }) {
             </TableRow>
           </TableHead>
           <TableBody>
-            {issuedHolders
+            {credentials
               .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-              .map((row) => {
-                const credentialArray = row.credentialCidList
-                credentialArray.map((credential)=>{
-                  return (
-                    <TableRow hover role="checkbox" tabIndex={-1} key={row._id}>
-                      {columns.map((column) => {
-                        const value = credential[column.id];
+              .map((credential) => {
+                return (
+                  <TableRow
+                    hover
+                    role="checkbox"
+                    tabIndex={-1}
+                    key={credential.DID}
+                  >
+                    {columns.map((column) => {
+                      const value = credential[column.id];
+                      if (column.id === "ipfsLink") {
+                        return (
+                          <TableCell
+                            key={column.id}
+                            align={column.align}
+                            style={{ textWrap: "no-wrap " }}
+                          >
+                            <Button href={value} target="_blank">
+                              {" "}
+                              GO TO IPFS{" "}
+                            </Button>
+                          </TableCell>
+                        );
+                      } else {
                         return (
                           <TableCell
                             key={column.id}
@@ -82,10 +108,10 @@ export default function IssuedHolders({ issuedHolders, setIssuedHolders }) {
                               : value}
                           </TableCell>
                         );
-                      })}
-                    </TableRow>
-                  );
-                })
+                      }
+                    })}
+                  </TableRow>
+                );
               })}
           </TableBody>
         </Table>
@@ -93,7 +119,7 @@ export default function IssuedHolders({ issuedHolders, setIssuedHolders }) {
       <TablePagination
         rowsPerPageOptions={[5, 10, 25]}
         component="div"
-        count={issuedHolders.length}
+        count={credentials.length}
         rowsPerPage={rowsPerPage}
         page={page}
         onPageChange={handleChangePage}

@@ -1,9 +1,8 @@
-import { Button, createTheme, styled, TextField } from "@mui/material";
+import { Button, styled, TextField } from "@mui/material";
 import React, { useState } from "react";
 import axios from "axios";
 import { v4 as uuidv4 } from "uuid";
-import { useMetaMask } from "../../src/hooks/useMetamask";
-import { ethers, QuickNodeProvider } from "ethers";
+import { ethers } from "ethers";
 import { DIDIssuerAddress } from "../../src/contracts/DIDIssuerAddress";
 import DIDIssuerABI from "../../src/contracts/DIDIssuerABI.json";
 const StyledTextField = styled(TextField)(({ theme }) => ({
@@ -38,30 +37,23 @@ const Form = (props) => {
   };
 
   const callMint = async (address, credName, cid) => {
-    console.log(address);
-    console.log(credName);
-    console.log(cid);
-
-    // let mint_func = contract.getFunction("mint");
-    // let tx = await mint_func.call(mint_func, address, credName, cid);
+    console.log("wallet address : ", address);
+    console.log("Name of Credential", credName);
+    console.log("IPFS URI", cid);
     const tx = await contractWithSigner.mint(address, credName, cid);
-    console.log(tx.data);
     await tx.wait();
-    console.log(`https://etherscan.io/tx/${tx.hash}`);
   };
 
-  const getCredentials = async (address) => {
-    console.log(address);
+  const getCredentialsFromContract = async (address) => {
+    const resp = await contractWithSigner.getCredentials(address);
+    let parsedCreds = JSON.parse(JSON.stringify(resp));
+    const credentials = parsedCreds.map((item) => ({
+      name: item[0],
+      DID: item[1],
+    }));
+    console.log(credentials);
 
-    // let mint_func = contract.getFunction("mint");
-    // let tx = await mint_func.call(mint_func, address, credName, cid);
-    const tx = await contractWithSigner.getCredential(address);
-    const credential = tx.data;
-    console.log(tx.data);
-    await tx.wait();
-    console.log(`https://etherscan.io/tx/${tx.hash}`);
-
-    return credential;
+    return credentials;
   };
 
   const createRequest = () => {
@@ -87,19 +79,22 @@ const Form = (props) => {
     let cid = resp.IpfsHash;
     // call smart contract with params
 
-    const credentials = await callMint(
+    const tx = await callMint(
       req.userData.walletAddress,
       req.userData.credentialName,
       cid
     );
-    console.log(credentials);
+    const credentials = await getCredentialsFromContract(
+      req.userData.walletAddress
+    );
     // update holder in db
     const updatedHolder = {
-      ...req.userData,
       isIssued: true,
-      credentials: credentials,
+      credentialCidList: credentials,
     };
+    console.log(updatedHolder);
     await updateHolder(req.userData.walletAddress, updatedHolder);
+    console.log("holder updated successfully");
   };
 
   const handleChange = (e) => {
