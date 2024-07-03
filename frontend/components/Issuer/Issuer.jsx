@@ -27,7 +27,7 @@ const Issuer = () => {
     axios
       .get(`${baseUrl}holdercollection/issued`)
       .then((response) => {
-        // console.log(response.data);
+        console.log("Issued Credential",response.data);
         setIssuedHolders(response.data);
       })
       .catch((error) => {

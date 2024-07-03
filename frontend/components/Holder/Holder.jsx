@@ -45,8 +45,8 @@ const Holder = () => {
     try {
       let req = createRequest();
       console.log(req);
-      let res = await axios.post(`${baseUrl}holderCredential`, req);
-      console.log(res);
+      let res = await axios.post(`${baseUrl}holdercollection`, req);
+      console.log("Register user in db", res);
       setActiveComponent('registerNotIssued');
     } catch (error) {
       console.log("error while registering holder", error);
@@ -55,7 +55,7 @@ const Holder = () => {
 
   const getHolderInfo = async (walletAddress) => {
     try {
-      const response = await axios.get(`${baseUrl}holderCredential/holder/${walletAddress}`);
+      const response = await axios.get(`${baseUrl}holdercollection/holder/${walletAddress}`);
       console.log("data from DB:", response);
       if (response.data.isRegistered && response.data.isIssued) {
         setActiveComponent('Issued');

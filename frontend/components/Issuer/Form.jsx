@@ -18,7 +18,7 @@ const provider = new ethers.AlchemyProvider("sepolia", API_KEY);
 // const provider = new ethers.BrowserProvider(window.ethereum);
 const signer = new ethers.Wallet(PRIVATE_KEY, provider);
 const contract = new ethers.Contract(DIDIssuerAddress, DIDIssuerABI, signer);
-// const contractWithSigner = contract.connect(signer);
+const contractWithSigner = contract.connect(signer);
 
 const Form = (props) => {
   const idx = uuidv4();
@@ -42,15 +42,28 @@ const Form = (props) => {
     console.log(credName);
     console.log(cid);
 
-    let mint_func = contract.getFunction("mint");
-    let tx = await mint_func.call(mint_func, address, credName, cid);
-    // const tx = await contractWithSigner.mint(address, credName, cid);
+    // let mint_func = contract.getFunction("mint");
+    // let tx = await mint_func.call(mint_func, address, credName, cid);
+    const tx = await contractWithSigner.mint(address, credName, cid);
+    console.log(tx.data);
     await tx.wait();
     console.log(`https://etherscan.io/tx/${tx.hash}`);
-    const did = await contract.record(address);
-
-    return did;
   };
+
+  const getCredentials = async (address) => {
+    console.log(address);
+
+    // let mint_func = contract.getFunction("mint");
+    // let tx = await mint_func.call(mint_func, address, credName, cid);
+    const tx = await contractWithSigner.getCredential(address);
+    const credential = tx.data;
+    console.log(tx.data);
+    await tx.wait();
+    console.log(`https://etherscan.io/tx/${tx.hash}`);
+
+    return credential;
+  };
+
   const createRequest = () => {
     const req = {
       objectId: idx,

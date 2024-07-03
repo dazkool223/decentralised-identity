@@ -15,7 +15,7 @@ app.use("/verify", verify);
 
 // server configuration
 const PORT = 8000;
-
+process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 // Use the api keys by specifying your api key and api secret
 const pinata = new pinataSDK({
   pinataApiKey: process.env.API_KEY,
