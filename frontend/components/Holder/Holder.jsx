@@ -44,9 +44,9 @@ const Holder = () => {
   const registerToDB = async () => {
     try {
       let req = createRequest();
-      console.log(req);
+      // console.log(req);
       let res = await axios.post(`${baseUrl}holdercollection`, req);
-      console.log("Register user in db", res);
+      // console.log("Register user in db", res);
       setActiveComponent('registerNotIssued');
     } catch (error) {
       console.log("error while registering holder", error);
@@ -56,10 +56,11 @@ const Holder = () => {
   const getHolderInfo = async (walletAddress) => {
     try {
       const response = await axios.get(`${baseUrl}holdercollection/holder/${walletAddress}`);
-      console.log("data from DB:", response);
+      // console.log("data from DB:", response.data);
       if (response.data.isRegistered && response.data.isIssued) {
         setActiveComponent('Issued');
         setCredentialCidList(response.data.credentialCidList);
+        // console.log("CREDENTIAL DATA:", credentialCidList)
       } else if (response.data.isRegistered) {
         setActiveComponent('registerNotIssued');
       } else {
@@ -82,20 +83,25 @@ const Holder = () => {
 
   const fetchCredential = async () => {
     try {
-      const fetchedCredentials = await Promise.all(
-        credentialCidList.map(async (item) => {
-          const result = await axios.get(`https://ipfs.io/ipfs/${item}`);
-          return result.data;
-        })
-      );
-      setCredentials(fetchedCredentials);
+     
+      const promises = credentialCidList.map(async (item) => {
+        const did = item.DID;
+        let cid = did.split(':');
+        console.log("DID:", cid[2]);
+        const result = await axios.get(`https://ipfs.io/ipfs/${cid[2]}`);
+        console.log("IPFS DATA:", result.data);
+        return result.data;
+      });
+
+      const results = await Promise.all(promises);
+      setCredentials(results);
       setActiveComponent('credential');
     } catch (error) {
       console.error("Error fetching data:", error);
     }
   };
 
-  const checkIssuedStatus = () => {
+const checkIssuedStatus = () => {
     if (holder.isIssued) {
       setActiveComponent('Issued');
     } else {
@@ -139,7 +145,7 @@ const Holder = () => {
     case 'credential':
       componentToRender = (
         <>
-          {credentials.map((item, idx) => (
+          {credentials.map((credential, idx) => (
             <div key={idx} style={{
               border: '1px solid #ccc',
               borderRadius: '8px',
@@ -149,7 +155,8 @@ const Holder = () => {
               backgroundImage: 'linear-gradient(to bottom right, rgb(6 228 146), rgb(208 96 253))',
               color: 'black'
             }}>
-              <p style={{ margin: '8px 0' }}>{item}</p>
+              {/* <p style={{ margin: '8px 0' }}>{item}</p> */}
+              <pre>{JSON.stringify(credential, null, 2)}</pre>
             </div>
           ))}
         </>
