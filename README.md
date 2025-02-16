@@ -1,28 +1,6 @@
-To install, run the following command :
+## About
+The Identity of a user in digital world is an important factor for an individual. Identity management has been handled by various models which, over the period of time have been prone various security breaches. The foremost integral part of any identity model is the centralized storage, access of data. Considering this, in recent years, there has been evolution from centralization to de-centralization of Identity management. With respect to this new aspect, this project proposes a solution to the centralized management problems, as a decentralized Identity Management System. The said approach utilizes Ethereum blockchain, IPFS, both supporting distributed data accessibility and data storage respectively. This prjoject also sheds light on the W3C specification of DID (De-centralized Identifier) which supports the Self-Sovereign Identity principles for de-centralization of Identity Management.
 
-```
-git clone https://github.com/dazkool223/decentralised-identity.git
-```
-
-Open VS Code and open "decentralised-identity" project
-To run dependancies and run frontend :
-
-```
-cd frontend/
-npm install
-npm run dev
-```
-
-To install dependancies and run API :
-
-```
-cd api/
-npm install
-npm run dev
-```
-
-
-wallet address | credential name | credential DID | view credentials button <a>ipfs link</a>
-
-0x123 | PASSPORT | did:PASS:456 | link1
-0x123 | GYM | did:GYM:pqr | link2
+This project implements zk-Snark to verify identity
+reference link : https://www.developer.tech.gov.sg/communities/events/stack-meetups/past-webinars/zero-knowledge-proof-part-2
+address to smart contract : https://sepolia.etherscan.io/address/0x5DC60d4B1523afe8cA8136a49183ef8f1682989F
